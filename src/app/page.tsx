@@ -1,17 +1,47 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import SportSelector from "@/components/SportSelector";
 import GameCard from "@/components/GameCard";
 import PropInsightCard from "@/components/PropInsightCard";
-import { GAMES, PROP_INSIGHTS, TOP_MODELS } from "@/lib/mockData";
+import { TOP_MODELS } from "@/lib/mockData";
+import type { Game, PropInsight } from "@/lib/mockData";
+
+type GamesState = { sport: string; data: Game[] } | null;
+type PropsState = { sport: string; data: PropInsight[] } | null;
 
 export default function HomePage() {
   const [sport, setSport] = useState("nba");
+  const [gamesState, setGamesState] = useState<GamesState>(null);
+  const [propsState, setPropsState] = useState<PropsState>(null);
 
-  const filteredGames = GAMES.filter((g) => g.sport === sport);
-  const filteredProps = PROP_INSIGHTS.slice(0, 3);
+  const gamesLoading = gamesState === null || gamesState.sport !== sport;
+  const propsLoading = propsState === null || propsState.sport !== sport;
+  const games = gamesState?.data ?? [];
+  const props = propsState?.data ?? [];
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/odds/games?sport=${sport}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) setGamesState({ sport, data: Array.isArray(data) ? data : [] });
+      })
+      .catch(() => { if (!cancelled) setGamesState({ sport, data: [] }); });
+    return () => { cancelled = true; };
+  }, [sport]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/odds/props?sport=${sport}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) setPropsState({ sport, data: Array.isArray(data) ? data : [] });
+      })
+      .catch(() => { if (!cancelled) setPropsState({ sport, data: [] }); });
+    return () => { cancelled = true; };
+  }, [sport]);
 
   return (
     <div className="flex flex-col min-h-screen pb-20" style={{ background: "#0d0d0f" }}>
@@ -72,9 +102,11 @@ export default function HomePage() {
             See all →
           </Link>
         </div>
-        {filteredGames.length > 0 ? (
+        {gamesLoading ? (
+          <div className="px-4 text-gray-500 text-sm">Loading games…</div>
+        ) : games.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
-            {filteredGames.map((game) => (
+            {games.map((game) => (
               <GameCard key={game.id} game={game} />
             ))}
           </div>
@@ -154,9 +186,15 @@ export default function HomePage() {
         </div>
 
         <div className="px-4 flex flex-col gap-3">
-          {filteredProps.map((prop) => (
-            <PropInsightCard key={prop.id} prop={prop} />
-          ))}
+          {propsLoading ? (
+            <div className="text-gray-500 text-sm">Loading props…</div>
+          ) : props.length > 0 ? (
+            props.slice(0, 3).map((prop) => (
+              <PropInsightCard key={prop.id} prop={prop} />
+            ))
+          ) : (
+            <div className="text-gray-500 text-sm">No props available right now.</div>
+          )}
         </div>
       </section>
 

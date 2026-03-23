@@ -1,16 +1,27 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BottomNav from "@/components/BottomNav";
 import FilterChips from "@/components/FilterChips";
 import PropInsightCard from "@/components/PropInsightCard";
-import { PROP_INSIGHTS } from "@/lib/mockData";
+import type { PropInsight } from "@/lib/mockData";
 
 const PROP_FILTERS = ["All", "High Conf", "Over", "Under", "Points", "Rebounds", "Assists"];
 
 export default function PropsPage() {
   const [filter, setFilter] = useState("All");
+  const [allProps, setAllProps] = useState<PropInsight[] | null>(null);
+  const loading = allProps === null;
 
-  const filtered = PROP_INSIGHTS.filter((p) => {
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/odds/props?sport=nba")
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) setAllProps(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelled) setAllProps([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = (allProps ?? []).filter((p) => {
     if (filter === "All") return true;
     if (filter === "High Conf") return p.confidence >= 70;
     if (filter === "Over") return p.direction === "over";
@@ -30,7 +41,14 @@ export default function PropsPage() {
       </div>
 
       <div className="px-4 flex flex-col gap-3">
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div
+            className="rounded-2xl border p-6 text-center"
+            style={{ background: "#141418", borderColor: "#222228" }}
+          >
+            <div className="text-gray-400 text-sm">Loading props…</div>
+          </div>
+        ) : filtered.length > 0 ? (
           filtered.map((prop) => <PropInsightCard key={prop.id} prop={prop} />)
         ) : (
           <div

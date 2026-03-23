@@ -1,23 +1,43 @@
 "use client";
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import Tabs from "@/components/Tabs";
 import FilterChips from "@/components/FilterChips";
 import TrendChart from "@/components/TrendChart";
-import { PROP_INSIGHTS, formatGameTime, formatGameDate } from "@/lib/mockData";
+import { formatGameTime, formatGameDate } from "@/lib/mockData";
+import type { PropInsight } from "@/lib/mockData";
 
 const PROP_TABS = ["Trends", "Insights", "Splits", "Injuries"];
 const TREND_FILTERS = ["Home + Away", "L5", "L10", "L20"];
 
 export default function PropDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const prop = PROP_INSIGHTS.find((p) => p.id === id);
-  if (!prop) notFound();
 
+  const [prop, setProp] = useState<PropInsight | null | undefined>(undefined);
   const [activeTab, setActiveTab] = useState("Trends");
   const [trendFilter, setTrendFilter] = useState("L10");
+
+  useEffect(() => {
+    fetch("/api/odds/props?sport=nba")
+      .then((r) => r.json())
+      .then((data: PropInsight[]) => {
+        const found = Array.isArray(data) ? data.find((p) => p.id === id) : null;
+        setProp(found ?? null);
+      })
+      .catch(() => setProp(null));
+  }, [id]);
+
+  if (prop === undefined) {
+    return (
+      <div className="flex flex-col min-h-screen pb-20 items-center justify-center" style={{ background: "#0d0d0f" }}>
+        <div className="text-gray-500 text-sm">Loading prop…</div>
+      </div>
+    );
+  }
+
+  if (prop === null) return notFound();
 
   const isOver = prop.direction === "over";
   const accentColor = isOver ? "#39ff14" : "#ff6b2b";

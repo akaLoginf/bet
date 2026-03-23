@@ -1,25 +1,56 @@
 "use client";
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import Tabs from "@/components/Tabs";
 import FilterChips from "@/components/FilterChips";
 import PropInsightCard from "@/components/PropInsightCard";
-import { GAMES, PROP_INSIGHTS, formatGameTime } from "@/lib/mockData";
+import { formatGameTime } from "@/lib/mockData";
+import type { Game, PropInsight } from "@/lib/mockData";
 
 const GAME_TABS = ["Smart Signals", "Game Lines", "Player Props", "Injuries"];
 const LINE_FILTERS = ["All", "Spread", "Moneyline", "Total"];
 
 export default function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const game = GAMES.find((g) => g.id === id);
-  if (!game) notFound();
 
+  const [game, setGame] = useState<Game | null | undefined>(undefined); // undefined = loading
+  const [gameProps, setGameProps] = useState<PropInsight[]>([]);
   const [activeTab, setActiveTab] = useState("Smart Signals");
   const [lineFilter, setLineFilter] = useState("All");
 
-  const gameProps = PROP_INSIGHTS.filter((p) => p.gameId === game.id);
+  useEffect(() => {
+    // Read the sport from the URL query string (window is available client-side)
+    const sport = new URLSearchParams(window.location.search).get("sport") ?? "nba";
+
+    fetch(`/api/odds/games?sport=${sport}`)
+      .then((r) => r.json())
+      .then((data: Game[]) => {
+        const found = Array.isArray(data) ? data.find((g) => g.id === id) : null;
+        setGame(found ?? null);
+      })
+      .catch(() => setGame(null));
+
+    fetch(`/api/odds/props?sport=${sport}`)
+      .then((r) => r.json())
+      .then((data: PropInsight[]) =>
+        setGameProps(Array.isArray(data) ? data.filter((p) => p.gameId === id) : [])
+      )
+      .catch(() => setGameProps([]));
+  }, [id]);
+
+  // Still loading
+  if (game === undefined) {
+    return (
+      <div className="flex flex-col min-h-screen pb-20 items-center justify-center" style={{ background: "#0d0d0f" }}>
+        <div className="text-gray-500 text-sm">Loading game…</div>
+      </div>
+    );
+  }
+
+  // Game not found
+  if (game === null) return notFound();
 
   const awayWin = 100 - (game.winChanceHome ?? 50);
   const homeWin = game.winChanceHome ?? 50;
@@ -61,7 +92,9 @@ export default function GameDetailPage({ params }: { params: Promise<{ id: strin
           <div className="flex flex-col items-center">
             <div className="text-gray-400 text-xs mb-1">{formatGameTime(game.gameTime)}</div>
             <div className="text-white font-black text-xl">VS</div>
-            <div className="text-gray-500 text-xs mt-1">Mar 24</div>
+            <div className="text-gray-500 text-xs mt-1">
+                {new Date(game.gameTime).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              </div>
           </div>
 
           {/* Home team */}

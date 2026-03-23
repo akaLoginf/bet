@@ -9,7 +9,7 @@ export default function GameCard({ game }: GameCardProps) {
   const { homeTeam, awayTeam, gameTime, spread, moneylineHome, total, winChanceHome } = game;
 
   return (
-    <Link href={`/games/${game.id}`}>
+    <Link href={`/games/${game.id}?sport=${game.sport}`}>
       <div className="flex-shrink-0 w-72 rounded-2xl border border-gray-800 bg-gray-900 p-4 cursor-pointer hover:border-gray-600 transition-colors">
         {/* Teams */}
         <div className="flex items-center justify-between mb-3">

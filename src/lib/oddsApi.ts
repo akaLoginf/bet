@@ -308,8 +308,10 @@ export async function fetchGames(appSport: string): Promise<Game[]> {
   // Cache for 5 minutes — balances quota cost vs. odds freshness (lines move slowly outside game time)
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) {
-    console.error(`Odds API /odds responded ${res.status} for sport "${appSport}"`);
-    return [];
+    const body = await res.text().catch(() => "");
+    const msg = `Odds API returned ${res.status} for sport "${appSport}"${body ? `: ${body}` : ""}`;
+    console.error(msg);
+    throw new Error(msg);
   }
   const events: OddsEvent[] = await res.json();
   return events.map((e) => mapEventToGame(e, appSport));
@@ -324,8 +326,10 @@ export async function fetchProps(appSport: string): Promise<PropInsight[]> {
   const eventsUrl = `${BASE_URL}/sports/${sportKey}/events?apiKey=${apiKey}`;
   const eventsRes = await fetch(eventsUrl, { next: { revalidate: 300 } });
   if (!eventsRes.ok) {
-    console.error(`Odds API /events responded ${eventsRes.status} for sport "${appSport}"`);
-    return [];
+    const body = await eventsRes.text().catch(() => "");
+    const msg = `Odds API returned ${eventsRes.status} for events of sport "${appSport}"${body ? `: ${body}` : ""}`;
+    console.error(msg);
+    throw new Error(msg);
   }
   const events: Pick<OddsEvent, "id" | "home_team" | "away_team" | "commence_time">[] =
     await eventsRes.json();

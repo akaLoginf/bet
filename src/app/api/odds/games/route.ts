@@ -7,7 +7,8 @@ export async function GET(req: NextRequest) {
     const games = await fetchGames(sport);
     return NextResponse.json(games);
   } catch (err) {
-    console.error("GET /api/odds/games error:", err);
-    return NextResponse.json({ error: "Failed to fetch games" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Failed to fetch games";
+    console.error("GET /api/odds/games error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

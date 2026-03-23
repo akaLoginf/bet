@@ -15,6 +15,8 @@ export default function HomePage() {
   const [sport, setSport] = useState("nba");
   const [gamesState, setGamesState] = useState<GamesState>(null);
   const [propsState, setPropsState] = useState<PropsState>(null);
+  const [gamesError, setGamesError] = useState<string | null>(null);
+  const [propsError, setPropsError] = useState<string | null>(null);
 
   const gamesLoading = gamesState === null || gamesState.sport !== sport;
   const propsLoading = propsState === null || propsState.sport !== sport;
@@ -23,23 +25,47 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
+    setGamesError(null);
     fetch(`/api/odds/games?sport=${sport}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) setGamesState({ sport, data: Array.isArray(data) ? data : [] });
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (cancelled) return;
+        if (!ok) {
+          setGamesError(data?.error ?? "Failed to load games");
+          setGamesState({ sport, data: [] });
+        } else {
+          setGamesState({ sport, data: Array.isArray(data) ? data : [] });
+        }
       })
-      .catch(() => { if (!cancelled) setGamesState({ sport, data: [] }); });
+      .catch(() => {
+        if (!cancelled) {
+          setGamesError("Network error");
+          setGamesState({ sport, data: [] });
+        }
+      });
     return () => { cancelled = true; };
   }, [sport]);
 
   useEffect(() => {
     let cancelled = false;
+    setPropsError(null);
     fetch(`/api/odds/props?sport=${sport}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) setPropsState({ sport, data: Array.isArray(data) ? data : [] });
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (cancelled) return;
+        if (!ok) {
+          setPropsError(data?.error ?? "Failed to load props");
+          setPropsState({ sport, data: [] });
+        } else {
+          setPropsState({ sport, data: Array.isArray(data) ? data : [] });
+        }
       })
-      .catch(() => { if (!cancelled) setPropsState({ sport, data: [] }); });
+      .catch(() => {
+        if (!cancelled) {
+          setPropsError("Network error");
+          setPropsState({ sport, data: [] });
+        }
+      });
     return () => { cancelled = true; };
   }, [sport]);
 
@@ -104,6 +130,13 @@ export default function HomePage() {
         </div>
         {gamesLoading ? (
           <div className="px-4 text-gray-500 text-sm">Loading games…</div>
+        ) : gamesError ? (
+          <div className="px-4">
+            <div className="rounded-2xl border p-4 text-center" style={{ background: "#141418", borderColor: "#ff6b2b44" }}>
+              <div className="text-xs font-semibold mb-1" style={{ color: "#ff6b2b" }}>Unable to load games</div>
+              <div className="text-gray-500 text-xs">{gamesError}</div>
+            </div>
+          </div>
         ) : games.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide">
             {games.map((game) => (
@@ -188,6 +221,11 @@ export default function HomePage() {
         <div className="px-4 flex flex-col gap-3">
           {propsLoading ? (
             <div className="text-gray-500 text-sm">Loading props…</div>
+          ) : propsError ? (
+            <div className="rounded-2xl border p-4 text-center" style={{ background: "#141418", borderColor: "#ff6b2b44" }}>
+              <div className="text-xs font-semibold mb-1" style={{ color: "#ff6b2b" }}>Unable to load props</div>
+              <div className="text-gray-500 text-xs">{propsError}</div>
+            </div>
           ) : props.length > 0 ? (
             props.slice(0, 3).map((prop) => (
               <PropInsightCard key={prop.id} prop={prop} />

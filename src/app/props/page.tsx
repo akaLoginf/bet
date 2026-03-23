@@ -10,14 +10,29 @@ const PROP_FILTERS = ["All", "High Conf", "Over", "Under", "Points", "Rebounds",
 export default function PropsPage() {
   const [filter, setFilter] = useState("All");
   const [allProps, setAllProps] = useState<PropInsight[] | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const loading = allProps === null;
 
   useEffect(() => {
     let cancelled = false;
+    setApiError(null);
     fetch("/api/odds/props?sport=nba")
-      .then((r) => r.json())
-      .then((data) => { if (!cancelled) setAllProps(Array.isArray(data) ? data : []); })
-      .catch(() => { if (!cancelled) setAllProps([]); });
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (cancelled) return;
+        if (!ok) {
+          setApiError(data?.error ?? "Failed to load props");
+          setAllProps([]);
+        } else {
+          setAllProps(Array.isArray(data) ? data : []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setApiError("Network error — could not reach the server");
+          setAllProps([]);
+        }
+      });
     return () => { cancelled = true; };
   }, []);
 
@@ -47,6 +62,14 @@ export default function PropsPage() {
             style={{ background: "#141418", borderColor: "#222228" }}
           >
             <div className="text-gray-400 text-sm">Loading props…</div>
+          </div>
+        ) : apiError ? (
+          <div
+            className="rounded-2xl border p-6 text-center"
+            style={{ background: "#141418", borderColor: "#ff6b2b44" }}
+          >
+            <div className="text-sm font-semibold mb-1" style={{ color: "#ff6b2b" }}>Unable to load props</div>
+            <div className="text-gray-500 text-xs">{apiError}</div>
           </div>
         ) : filtered.length > 0 ? (
           filtered.map((prop) => <PropInsightCard key={prop.id} prop={prop} />)

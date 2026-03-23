@@ -12,18 +12,31 @@ export default function GamesPage() {
   const activeSport = sport === "All" ? "nba" : sport.toLowerCase();
 
   const [allGames, setAllGames] = useState<{ sport: string; data: Game[] } | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const loading = allGames === null || allGames.sport !== activeSport;
   const filtered = allGames?.data ?? [];
 
   useEffect(() => {
     let cancelled = false;
+    setApiError(null);
     fetch(`/api/odds/games?sport=${activeSport}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) setAllGames({ sport: activeSport, data: Array.isArray(data) ? data : [] });
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (cancelled) return;
+        if (!ok) {
+          setApiError(data?.error ?? "Failed to load games");
+          setAllGames({ sport: activeSport, data: [] });
+        } else {
+          setAllGames({ sport: activeSport, data: Array.isArray(data) ? data : [] });
+        }
       })
-      .catch(() => { if (!cancelled) setAllGames({ sport: activeSport, data: [] }); });
+      .catch(() => {
+        if (!cancelled) {
+          setApiError("Network error — could not reach the server");
+          setAllGames({ sport: activeSport, data: [] });
+        }
+      });
     return () => { cancelled = true; };
   }, [activeSport]);
 
@@ -43,8 +56,13 @@ export default function GamesPage() {
       <div className="px-4 flex flex-col gap-3">
         {loading ? (
           <div className="text-gray-500 text-sm py-6 text-center">Loading games…</div>
+        ) : apiError ? (
+          <div className="rounded-2xl border p-5 text-center" style={{ background: "#141418", borderColor: "#ff6b2b44" }}>
+            <div className="text-sm font-semibold mb-1" style={{ color: "#ff6b2b" }}>Unable to load games</div>
+            <div className="text-gray-500 text-xs">{apiError}</div>
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="text-gray-500 text-sm py-6 text-center">No games available.</div>
+          <div className="text-gray-500 text-sm py-6 text-center">No games scheduled for this sport right now.</div>
         ) : (
           filtered.map((game) => (
             <Link key={game.id} href={`/games/${game.id}?sport=${game.sport}`}>

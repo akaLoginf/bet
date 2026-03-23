@@ -1,0 +1,48 @@
+"use client";
+import { useState } from "react";
+import BottomNav from "@/components/BottomNav";
+import FilterChips from "@/components/FilterChips";
+import PropInsightCard from "@/components/PropInsightCard";
+import { PROP_INSIGHTS } from "@/lib/mockData";
+
+const PROP_FILTERS = ["All", "High Conf", "Over", "Under", "Points", "Rebounds", "Assists"];
+
+export default function PropsPage() {
+  const [filter, setFilter] = useState("All");
+
+  const filtered = PROP_INSIGHTS.filter((p) => {
+    if (filter === "All") return true;
+    if (filter === "High Conf") return p.confidence >= 70;
+    if (filter === "Over") return p.direction === "over";
+    if (filter === "Under") return p.direction === "under";
+    return p.propType.toLowerCase().includes(filter.toLowerCase());
+  });
+
+  return (
+    <div className="flex flex-col min-h-screen pb-20" style={{ background: "#0d0d0f" }}>
+      <header className="px-4 pt-12 pb-3">
+        <h1 className="text-white font-bold text-xl mb-1">Prop Analytics</h1>
+        <p className="text-gray-500 text-xs">Model-backed prop insights for today&apos;s games</p>
+      </header>
+
+      <div className="px-4 mb-4 overflow-x-auto scrollbar-hide">
+        <FilterChips filters={PROP_FILTERS} active={filter} onChange={setFilter} />
+      </div>
+
+      <div className="px-4 flex flex-col gap-3">
+        {filtered.length > 0 ? (
+          filtered.map((prop) => <PropInsightCard key={prop.id} prop={prop} />)
+        ) : (
+          <div
+            className="rounded-2xl border p-6 text-center"
+            style={{ background: "#141418", borderColor: "#222228" }}
+          >
+            <div className="text-gray-400 text-sm">No props match this filter.</div>
+          </div>
+        )}
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}

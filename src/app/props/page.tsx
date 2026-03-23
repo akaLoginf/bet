@@ -16,24 +16,30 @@ export default function PropsPage() {
   useEffect(() => {
     let cancelled = false;
     setApiError(null);
-    fetch("/api/odds/props?sport=nba")
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        if (cancelled) return;
-        if (!ok) {
-          setApiError(data?.error ?? "Failed to load props");
-          setAllProps([]);
-        } else {
-          setAllProps(Array.isArray(data) ? data : []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setApiError("Network error — could not reach the server");
-          setAllProps([]);
-        }
-      });
-    return () => { cancelled = true; };
+
+    const loadProps = () => {
+      fetch("/api/odds/props?sport=nba")
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (cancelled) return;
+          if (!ok) {
+            setApiError(data?.error ?? "Failed to load props");
+            setAllProps([]);
+          } else {
+            setAllProps(Array.isArray(data) ? data : []);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setApiError("Network error — could not reach the server");
+            setAllProps([]);
+          }
+        });
+    };
+
+    loadProps();
+    const interval = setInterval(loadProps, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   const filtered = (allProps ?? []).filter((p) => {

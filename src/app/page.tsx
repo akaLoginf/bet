@@ -26,47 +26,59 @@ export default function HomePage() {
   useEffect(() => {
     let cancelled = false;
     setGamesError(null);
-    fetch(`/api/odds/games?sport=${sport}`)
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        if (cancelled) return;
-        if (!ok) {
-          setGamesError(data?.error ?? "Failed to load games");
-          setGamesState({ sport, data: [] });
-        } else {
-          setGamesState({ sport, data: Array.isArray(data) ? data : [] });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setGamesError("Network error");
-          setGamesState({ sport, data: [] });
-        }
-      });
-    return () => { cancelled = true; };
+
+    const loadGames = () => {
+      fetch(`/api/odds/games?sport=${sport}`)
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (cancelled) return;
+          if (!ok) {
+            setGamesError(data?.error ?? "Failed to load games");
+            setGamesState({ sport, data: [] });
+          } else {
+            setGamesState({ sport, data: Array.isArray(data) ? data : [] });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setGamesError("Network error");
+            setGamesState({ sport, data: [] });
+          }
+        });
+    };
+
+    loadGames();
+    const gamesInterval = setInterval(loadGames, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(gamesInterval); };
   }, [sport]);
 
   useEffect(() => {
     let cancelled = false;
     setPropsError(null);
-    fetch(`/api/odds/props?sport=${sport}`)
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        if (cancelled) return;
-        if (!ok) {
-          setPropsError(data?.error ?? "Failed to load props");
-          setPropsState({ sport, data: [] });
-        } else {
-          setPropsState({ sport, data: Array.isArray(data) ? data : [] });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setPropsError("Network error");
-          setPropsState({ sport, data: [] });
-        }
-      });
-    return () => { cancelled = true; };
+
+    const loadProps = () => {
+      fetch(`/api/odds/props?sport=${sport}`)
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (cancelled) return;
+          if (!ok) {
+            setPropsError(data?.error ?? "Failed to load props");
+            setPropsState({ sport, data: [] });
+          } else {
+            setPropsState({ sport, data: Array.isArray(data) ? data : [] });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setPropsError("Network error");
+            setPropsState({ sport, data: [] });
+          }
+        });
+    };
+
+    loadProps();
+    const propsInterval = setInterval(loadProps, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(propsInterval); };
   }, [sport]);
 
   return (

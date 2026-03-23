@@ -20,24 +20,30 @@ export default function GamesPage() {
   useEffect(() => {
     let cancelled = false;
     setApiError(null);
-    fetch(`/api/odds/games?sport=${activeSport}`)
-      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
-      .then(({ ok, data }) => {
-        if (cancelled) return;
-        if (!ok) {
-          setApiError(data?.error ?? "Failed to load games");
-          setAllGames({ sport: activeSport, data: [] });
-        } else {
-          setAllGames({ sport: activeSport, data: Array.isArray(data) ? data : [] });
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setApiError("Network error — could not reach the server");
-          setAllGames({ sport: activeSport, data: [] });
-        }
-      });
-    return () => { cancelled = true; };
+
+    const loadGames = () => {
+      fetch(`/api/odds/games?sport=${activeSport}`)
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (cancelled) return;
+          if (!ok) {
+            setApiError(data?.error ?? "Failed to load games");
+            setAllGames({ sport: activeSport, data: [] });
+          } else {
+            setAllGames({ sport: activeSport, data: Array.isArray(data) ? data : [] });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setApiError("Network error — could not reach the server");
+            setAllGames({ sport: activeSport, data: [] });
+          }
+        });
+    };
+
+    loadGames();
+    const interval = setInterval(loadGames, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [activeSport]);
 
   return (

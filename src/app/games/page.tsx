@@ -8,7 +8,7 @@ import type { Game } from "@/lib/mockData";
 
 export default function GamesPage() {
   const [sport, setSport] = useState("All");
-  const sports = ["All", "NBA", "NFL", "MLB"];
+  const sports = ["All", "NBA", "NFL", "MLB", "NHL"];
   const activeSport = sport === "All" ? "nba" : sport.toLowerCase();
 
   const [allGames, setAllGames] = useState<{ sport: string; data: Game[] } | null>(null);

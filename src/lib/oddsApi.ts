@@ -9,13 +9,12 @@ import { lookupTeam } from "./teamLookup";
 
 const BASE_URL = "https://api.the-odds-api.com/v4";
 
-/** Map our app sport IDs → Odds API sport keys */
+/** Map our app sport IDs → Odds API sport keys (only sports on this subscription) */
 const SPORT_KEYS: Record<string, string> = {
   nba:  "basketball_nba",
   nfl:  "americanfootball_nfl",
   mlb:  "baseball_mlb",
-  cbb:  "basketball_ncaab",
-  wnba: "basketball_wnba",
+  nhl:  "icehockey_nhl",
 };
 
 /** Map Odds API player-prop market keys → human-readable prop types */

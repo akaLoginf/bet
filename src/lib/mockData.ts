@@ -68,12 +68,10 @@ export type Player = {
 };
 
 export const SPORTS: Sport[] = [
-  { id: "nba", label: "NBA", icon: "🏀" },
-  { id: "cbb", label: "CBB(M)", icon: "🏀" },
-  { id: "golf", label: "GOLF", icon: "⛳" },
-  { id: "wnba", label: "WNBA", icon: "🏀" },
-  { id: "mlb", label: "MLB", icon: "⚾" },
-  { id: "nfl", label: "NFL", icon: "🏈" },
+  { id: "nba",  label: "NBA", icon: "🏀" },
+  { id: "nfl",  label: "NFL", icon: "🏈" },
+  { id: "mlb",  label: "MLB", icon: "⚾" },
+  { id: "nhl",  label: "NHL", icon: "🏒" },
 ];
 
 export const TEAMS: Record<string, Team> = {

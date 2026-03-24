@@ -3,6 +3,7 @@ import { fetchProps } from "@/lib/oddsApi";
 
 export async function GET(req: NextRequest) {
   const sport = req.nextUrl.searchParams.get("sport") ?? "nba";
+
   try {
     const props = await fetchProps(sport);
     return NextResponse.json(props);

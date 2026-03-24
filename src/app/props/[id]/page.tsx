@@ -58,13 +58,6 @@ export default function PropDetailPage({ params }: { params: Promise<{ id: strin
     trendFilter === "L20" ? prop.l20HitRate :
     prop.homeAwayHitRate;
 
-  const savings = [
-    { book: "DraftKings", value: isOver ? "-115" : "-110" },
-    { book: "FanDuel", value: isOver ? "-112" : "-108" },
-    { book: "BetMGM", value: isOver ? "-118" : "-112" },
-    { book: "Caesars", value: isOver ? "-110" : "-115" },
-  ];
-
   return (
     <div className="flex flex-col min-h-screen pb-20" style={{ background: "#0d0d0f" }}>
       {/* Player header */}

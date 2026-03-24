@@ -15,9 +15,9 @@ export default function PropsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setApiError(null);
 
     const loadProps = () => {
+      setApiError(null);
       fetch("/api/odds/props?sport=nba")
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {

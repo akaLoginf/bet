@@ -25,9 +25,9 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
-    setGamesError(null);
 
     const loadGames = () => {
+      setGamesError(null);
       fetch(`/api/odds/games?sport=${sport}`)
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
@@ -54,9 +54,9 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
-    setPropsError(null);
 
     const loadProps = () => {
+      setPropsError(null);
       fetch(`/api/odds/props?sport=${sport}`)
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {

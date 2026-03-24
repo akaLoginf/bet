@@ -16,7 +16,7 @@ export default function ModelsPage() {
       </header>
 
       <div className="px-4 flex flex-col gap-4">
-        {TOP_MODELS.map((model, i) => {
+        {TOP_MODELS.map((model) => {
           const details = MODEL_DETAILS.find((d) => d.id === model.id) || MODEL_DETAILS[0];
           return (
             <div

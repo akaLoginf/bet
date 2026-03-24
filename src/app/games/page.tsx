@@ -19,9 +19,9 @@ export default function GamesPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setApiError(null);
 
     const loadGames = () => {
+      setApiError(null);
       fetch(`/api/odds/games?sport=${activeSport}`)
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
